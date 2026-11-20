@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoPet - Barangay Alabang Pet Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            overflow-x: hidden;
+            position: relative;
+            background: linear-gradient(180deg, #0d7a66 0%, #095859 48%, #1e1b4b 100%);
+            min-height: 100vh;
+            color: white;
+            transition: background 0.3s ease;
+        }
+
+        body.dashboard-mode {
+            background: #f8f9fa !important;
+            color: #212529 !important;
+        }
+
+        .copet-header {
+            background-color: #0d7a66;
+            color: white;
+            z-index: 1030;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+        }
+
+        .copet-header > div {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        #landing-page .copet-header { 
+            background-color: rgba(13, 122, 102, 0.45);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .hero-section {
+            background: transparent;
+            color: white;
+            padding: 95px 0 70px 0;
+            position: relative;
+            user-select: none;
+        }
+
+        @keyframes radarPulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.25; }
+            100% { transform: translate(-50%, -50%) scale(2.3); opacity: 0; }
+        }
+
+        .radar-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 320px;
+            height: 320px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: radarPulse 6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+        }
+
+        #pawCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        body.dashboard-mode #pawCanvas {
+            display: none;
+        }
+
+        .floating-paw {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.09);
+            pointer-events: none;
+            will-change: transform, color, filter;
+            transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease, filter 0.3s ease;
+        }
+
+        .floating-paw.active {
+            color: rgba(255, 193, 7, 0.72);
+            filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.55));
+        }
+
+        @keyframes gentleFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(5deg); }
+        }
+
+        .paw-inner {
+            animation: gentleFloat var(--float-duration, 5s) ease-in-out infinite;
+            animation-delay: var(--float-delay, 0s);
+        }
+
+        .hero-content,
+        .services-section {
+            position: relative;
+            z-index: 10;
+        }
+
+        .services-section {
+            padding-top: 30px;
+            padding-bottom: 80px;
+        }
+
+        .btn-glass {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+        .btn-glass:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.6);
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .feature-card {
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 14px;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #ffffff;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-6px);
+            background-color: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 193, 7, 0.5);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        .glass-modal {
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 16px;
+            color: #ffffff;
+        }
+        .glass-modal .modal-header {
+            background: rgba(13, 122, 102, 0.45);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+        .glass-modal .nav-pills .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            margin: 0 4px;
+        }
+        .glass-modal .nav-pills .nav-link.active {
+            background-color: rgba(13, 122, 102, 0.85);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #ffffff;
+        }
+        .glass-modal .input-group-text {
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+        }
+        .glass-modal .form-control {
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+        }
+        .glass-modal .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .glass-modal .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+
+        #landing-page footer {
+            position: relative;
+            z-index: 10;
+            background-color: rgba(15, 13, 38, 0.8);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar { min-height: calc(100vh - 66px); background-color: #ffffff; border-right: 1px solid #dee2e6; }
+        .sidebar .nav-link { color: #495057; font-weight: 500; padding: 13px 20px; cursor: pointer; border-radius: 0; font-size: 0.95rem; }
+        .sidebar .nav-link i { width: 22px; text-align: center; margin-right: 8px; font-size: 0.95rem; color: #6c757d; }
+        .sidebar .nav-link.active { background-color: #e6f2f0; color: #0d7a66; font-weight: bold; border-left: 4px solid #0d7a66; }
+        .sidebar .nav-link.active i { color: #0d7a66; }
+        .stat-card { border: 1px solid #e9ecef; border-radius: 10px; background: #fff; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); }
+
+        .pet-img-box {
+            width: 100%;
+            height: 190px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pet-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .report-thumb {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #dee2e6;
+        }
+        .report-thumb-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background-color: #f1f3f5;
+            border: 1px dashed #ced4da;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #868e96;
+            font-size: 1rem;
+        }
+
+        .match-alert-box {
+            background-color: #e3f4fc;
+            border: 1px solid #b6e3f8;
+            border-radius: 8px;
+            padding: 18px 20px;
+        }
+
+        .view-page { display: none; }
+        .view-page.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <div id="pawCanvas"></div>
+
+    <!-- ========================================== -->
+    <!-- 1. PUBLIC LANDING PAGE                     -->
+    <!-- ========================================== -->
+    <div id="landing-page" class="view-page active">
+        <nav class="copet-header py-3 shadow-sm sticky-top">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fa-solid fa-paw fa-2x"></i>
+                    <div>
+                        <h5 class="m-0 fw-bold">CoPet Management Portal</h5>
+                        <small class="text-white-50">Barangay Alabang Pet Registration &amp; Tracking System</small>
+                    </div>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-glass fw-bold px-4" onclick="switchModal('loginModal')">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i> Login
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <section id="heroSection" class="hero-section text-center">
+            <div class="radar-ring"></div>
+            <div class="radar-ring" style="animation-delay: 3s;"></div>
+
+            <div class="container hero-content">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <h1 class="display-4 fw-bold mb-3">Welcome to CoPet Alabang</h1>
+                        <p class="lead mb-4 text-white-50">
+                            The official community web platform for registering pets, filing lost &amp; found reports, and automatically matching missing pets within Barangay Alabang.
+                        </p>
+                        <div class="d-flex justify-content-center gap-3 flex-wrap">
+                            <button type="button" class="btn btn-glass btn-lg px-4 fw-bold shadow-sm" onclick="switchModal('signupModal')">
+                                <i class="fa-solid fa-user-plus me-2"></i> Sign Up / Create Account
+                            </button>
+                            <button type="button" class="btn btn-glass btn-lg px-4 fw-bold" onclick="switchModal('loginModal')">
+                                <i class="fa-solid fa-bullhorn me-2"></i> Report Lost Pet
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="services-section">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h3 class="fw-bold text-white">Barangay Pet Services</h3>
+                    <p class="text-white-50">Built to protect animals and assist residents of Barangay Alabang</p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card feature-card shadow p-4 h-100 text-center">
+                            <div class="mb-3"><i class="fa-solid fa-shield-dog fa-3x text-warning"></i></div>
+                            <h5 class="fw-bold text-white">Digital Registration</h5>
+                            <p class="text-white-50 small mb-0">Register your dogs and cats online with complete profile details stored securely.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card feature-card shadow p-4 h-100 text-center">
+                            <div class="mb-3"><i class="fa-solid fa-magnifying-glass-location fa-3x text-danger"></i></div>
+                            <h5 class="fw-bold text-white">Lost &amp; Found Tracking</h5>
+                            <p class="text-white-50 small mb-0">Instantly upload missing pet details or found animal reports with last-seen locations.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card feature-card shadow p-4 h-100 text-center">
+                            <div class="mb-3"><i class="fa-solid fa-robot fa-3x text-info"></i></div>
+                            <h5 class="fw-bold text-white">Automated Matching</h5>
+                            <p class="text-white-50 small mb-0">Our system automatically cross-references lost and found pet entries.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-white py-4">
+            <div class="container text-center">
+                <p class="m-0 small text-white-50">&copy; 2026 CoPet: A Web-Based Community Pet Registration and Lost Pet Tracking System for Barangay Alabang</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- LOGIN MODAL -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-modal shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-paw me-2"></i> CoPet Account Login</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="loginAlert" class="alert alert-danger py-2 small d-none" role="alert"></div>
+
+                    <ul class="nav nav-pills nav-justified mb-4" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#resident-login" type="button">
+                                <i class="fa-solid fa-user me-1"></i> Resident / User
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#admin-login" type="button">
+                                <i class="fa-solid fa-user-shield me-1"></i> Barangay Admin
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="resident-login">
+                            <form id="residentLoginForm" autocomplete="off">
+                                <div class="mb-3">
+                                    <label class="form-label text-white-50 small fw-bold">USERNAME</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                        <input type="text" id="loginUsername" class="form-control" placeholder="Enter username" autocomplete="off" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-white-50 small fw-bold">PASSWORD</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                        <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" autocomplete="new-password" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-glass w-100 py-2 fw-bold mt-2">Login to Resident Portal</button>
+                                <div class="text-center mt-3">
+                                    <small class="text-white-50">Don't have an account yet? 
+                                        <a href="#" class="text-white fw-bold text-decoration-underline" onclick="switchModal('signupModal'); return false;">Sign Up</a>
+                                    </small>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="tab-pane fade" id="admin-login">
+                            <form id="adminLoginForm" autocomplete="off">
+                                <div class="mb-3">
+                                    <label class="form-label text-white-50 small fw-bold">ADMINISTRATOR USERNAME</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-shield-halved"></i></span>
+                                        <input type="text" id="adminUsername" class="form-control" placeholder="Enter admin username" autocomplete="off" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-white-50 small fw-bold">PASSWORD</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+                                        <input type="password" id="adminPassword" class="form-control" placeholder="Enter password" autocomplete="new-password" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-glass w-100 py-2 fw-bold mt-2">Login to Admin Portal</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIGN UP MODAL -->
+    <div class="modal fade" id="signupModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-modal shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-user-plus me-2"></i> Create Resident Account</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="signupAlert" class="alert py-2 small d-none" role="alert"></div>
+
+                    <form id="residentSignupForm" autocomplete="off">
+                        <div class="mb-3">
+                            <label class="form-label text-white-50 small fw-bold">FULL NAME</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card"></i></span>
+                                <input type="text" id="signupFullName" class="form-control" placeholder="Enter your full name" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50 small fw-bold">CONTACT NUMBER</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
+                                <input type="tel" id="signupContact" class="form-control" placeholder="09XX-XXX-XXXX" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50 small fw-bold">ADDRESS IN BARANGAY ALABANG</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                <input type="text" id="signupAddress" class="form-control" placeholder="House No., Street, Purok / Subdivision" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50 small fw-bold">USERNAME</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" id="signupUsername" class="form-control" placeholder="Choose a username" autocomplete="off" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50 small fw-bold">PASSWORD</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" id="signupPassword" class="form-control" placeholder="Create a password" autocomplete="new-password" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-glass w-100 py-2 fw-bold mt-2">Sign Up</button>
+                        <div class="text-center mt-3">
+                            <small class="text-white-50">Already have an account? 
+                                <a href="#" class="text-white fw-bold text-decoration-underline" onclick="switchModal('loginModal'); return false;">Login</a>
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 2. RESIDENT USER PORTAL                    -->
+    <!-- ========================================== -->
+    <div id="resident-portal" class="view-page">
+        <nav class="copet-header py-2 shadow-sm sticky-top">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fa-solid fa-paw fa-2x"></i>
+                    <div>
+                        <h5 class="m-0 fw-bold">CoPet Community Portal</h5>
+                        <small class="text-white-50">Barangay Alabang Pet Registration &amp; Tracking System</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-light text-dark px-3 py-2" id="residentHeaderName"><i class="fa-solid fa-user me-1"></i> Resident: Andrea Gando Moster</span>
+                    <button onclick="logout()" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-right-from-bracket me-1"></i> Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-3 col-lg-2 sidebar p-0">
+                    <div class="nav flex-column nav-pills mt-3" role="tablist">
+                        <button class="nav-link active text-start" id="u-reports-tab" data-bs-toggle="pill" data-bs-target="#u-reports" type="button"><i class="fa-solid fa-bullhorn"></i> Community Reports</button>
+                        <button class="nav-link text-start" id="u-mypets-tab" data-bs-toggle="pill" data-bs-target="#u-mypets" type="button"><i class="fa-solid fa-dog"></i> My Registered Pets</button>
+                        <button class="nav-link text-start" id="u-addpet-tab" data-bs-toggle="pill" data-bs-target="#u-addpet" type="button"><i class="fa-solid fa-circle-plus"></i> Register New Pet</button>
+                        <button class="nav-link text-start" id="u-report-tab" data-bs-toggle="pill" data-bs-target="#u-report" type="button"><i class="fa-solid fa-triangle-exclamation"></i> Report Incident</button>
+                        <button class="nav-link text-start" id="u-matches-tab" data-bs-toggle="pill" data-bs-target="#u-matches" type="button"><i class="fa-solid fa-bell"></i> Match Alerts <span class="badge bg-danger ms-1" id="user-match-badge">0</span></button>
+                    </div>
+                </div>
+
+                <main class="col-md-9 col-lg-10 ms-sm-auto px-md-4 py-4">
+                    <div class="tab-content">
+                        <!-- Community Reports -->
+                        <div class="tab-pane fade show active" id="u-reports">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 fw-bold text-dark"><i class="fa-solid fa-bullhorn me-2"></i> Barangay Community Incident Feed</h6>
+                                    <button class="btn btn-sm btn-danger" onclick="document.getElementById('u-report-tab').click()"><i class="fa-solid fa-plus me-1"></i> File New Report</button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Image</th>
+                                                    <th>Report ID</th>
+                                                    <th>Type</th>
+                                                    <th>Details</th>
+                                                    <th>Location</th>
+                                                    <th>Date &amp; Time</th>
+                                                    <th>Status</th>
+                                                    <th>Match Status</th>
+                                                    <th>Remarks</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="user-reports-tbody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- My Registered Pets -->
+                        <div class="tab-pane fade" id="u-mypets">
+                            <div id="my-pets-container"></div>
+                        </div>
+
+                        <!-- Register New Pet -->
+                        <div class="tab-pane fade" id="u-addpet">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white py-3">
+                                    <h6 class="m-0 fw-bold text-dark"><i class="fa-solid fa-shield-cat me-2"></i> Register New Pet Form</h6>
+                                </div>
+                                <div class="card-body p-4">
+                                    <form id="addPetForm" onsubmit="handleRegisterPet(event)">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label text-muted small fw-bold">PET NAME</label>
+                                                <input type="text" id="reg_pet_name" class="form-control" placeholder="e.g. Brownie" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label text-muted small fw-bold">PET TYPE</label>
+                                                <select id="reg_pet_type" class="form-select" required>
+                                                    <option value="Dog">Dog</option>
+                                                    <option value="Cat">Cat</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label text-muted small fw-bold">BREED</label>
+                                                <input type="text" id="reg_pet_breed" class="form-control" placeholder="e.g. Shih Tzu" required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label text-muted small fw-bold">COLOR</label>
+                                                <input type="text" id="reg_pet_color" class="form-control" placeholder="e.g. White / Brown" required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label text-muted small fw-bold">AGE</label>
+                                                <input type="text" id="reg_pet_age" class="form-control" placeholder="e.g. 2 yrs / 6 mos" required>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label text-muted small fw-bold">UPLOAD PET PICTURE</label>
+                                                <input type="file" id="reg_pet_image" class="form-control" accept="image/*">
+                                            </div>
+                                            <div class="col-md-12 text-end mt-4">
+                                                <button type="submit" class="btn btn-success px-4"><i class="fa-solid fa-paper-plane me-1"></i> Submit Registration</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Report Incident -->
+                        <div class="tab-pane fade" id="u-report">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white py-3">
+                                    <h6 class="m-0 fw-bold text-dark"><i class="fa-solid fa-bullhorn me-2"></i> File Incident Report</h6>
+                                </div>
+                                <div class="card-body p-4">
+                                    <form id="addReportForm" onsubmit="handleFileReport(event)">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label text-muted small fw-bold">REPORT TYPE</label>
+                                                <select id="rep_type" class="form-select">
+                                                    <option value="Lost">Lost Pet Report</option>
+                                                    <option value="Found">Found Pet Report</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label text-muted small fw-bold">PET NAME / DETAILS</label>
+                                                <input type="text" id="rep_details" class="form-control" placeholder="e.g. Buddy (Golden Retriever)" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label text-muted small fw-bold">LAST SEEN LOCATION</label>
+                                                <input type="text" id="rep_location" class="form-control" placeholder="e.g. Near Montillano St." required>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label text-muted small fw-bold">INCIDENT DATE</label>
+                                                <input type="date" id="rep_date" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label text-muted small fw-bold">INCIDENT TIME</label>
+                                                <input type="time" id="rep_time" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label text-muted small fw-bold">UPLOAD INCIDENT IMAGE</label>
+                                                <input type="file" id="rep_image" class="form-control" accept="image/*">
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label text-muted small fw-bold">REMARKS / ADDITIONAL NOTES</label>
+                                                <textarea id="rep_remarks" class="form-control" rows="3" placeholder="e.g. Wearing a red collar..."></textarea>
+                                            </div>
+                                            <div class="col-md-12 text-end mt-4">
+                                                <button type="submit" class="btn btn-danger px-4"><i class="fa-solid fa-paper-plane me-1"></i> Submit Report</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Match Alerts -->
+                        <div class="tab-pane fade" id="u-matches">
+                            <div class="card shadow-sm border-primary">
+                                <div class="card-header bg-primary text-white py-3">
+                                    <h6 class="m-0 fw-bold"><i class="fa-solid fa-robot me-2"></i> Automated System Matches Found</h6>
+                                </div>
+                                <div class="card-body p-4" id="user-matches-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 3. BARANGAY ADMIN DASHBOARD                -->
+    <!-- ========================================== -->
+    <div id="admin-portal" class="view-page">
+        <!-- Top Navigation Bar -->
+        <nav class="copet-header py-2 shadow-sm sticky-top">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fa-solid fa-paw fa-2x"></i>
+                    <div>
+                        <h5 class="m-0 fw-bold">CoPet Administration Portal</h5>
+                        <small class="text-white-50">Barangay Alabang Pet Registration &amp; Tracking System</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-light text-dark px-3 py-2" id="adminHeaderName"><i class="fa-solid fa-user-shield me-1"></i> Admin: Staff Office</span>
+                    <button onclick="logoutAdmin()" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-right-from-bracket me-1"></i> Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Sidebar Navigation Buttons -->
+                <div class="col-md-3 col-lg-2 sidebar p-0">
+                    <div class="nav flex-column nav-pills mt-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                        <button class="nav-link active text-start" id="v-pills-overview-tab" data-bs-toggle="pill" data-bs-target="#v-pills-overview" type="button" role="tab"><i class="fa-solid fa-chart-line"></i> Overview</button>
+                        <button class="nav-link text-start" id="v-pills-registrations-tab" data-bs-toggle="pill" data-bs-target="#v-pills-registrations" type="button" role="tab"><i class="fa-solid fa-id-card"></i> Pet Registrations</button>
+                        <button class="nav-link text-start" id="v-pills-reports-tab" data-bs-toggle="pill" data-bs-target="#v-pills-reports" type="button" role="tab"><i class="fa-solid fa-bullhorn"></i> Lost &amp; Found Reports</button>
+                        <button class="nav-link text-start" id="v-pills-matches-tab" data-bs-toggle="pill" data-bs-target="#v-pills-matches" type="button" role="tab"><i class="fa-solid fa-code-compare"></i> Auto-Match Engine</button>
+                        <button class="nav-link text-start" id="v-pills-analytics-tab" data-bs-toggle="pill" data-bs-target="#v-pills-analytics" type="button" role="tab"><i class="fa-solid fa-file-pdf"></i> Summary Reports</button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Tab Content Area -->
+                <main class="col-md-9 col-lg-10 ms-sm-auto px-md-4 py-4">
+                    <div class="tab-content" id="v-pills-tabContent">
+                        
+                        <!-- TAB 1: OVERVIEW -->
+                        <div class="tab-pane fade show active" id="v-pills-overview" role="tabpanel">
+                            <h4 class="fw-bold text-dark mb-3">System Overview</h4>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3">
+                                    <div class="card stat-card shadow-sm border-start border-4 border-success p-3">
+                                        <h6 class="text-muted fw-bold small mb-1">TOTAL REGISTERED</h6>
+                                        <h3 class="mb-0 fw-bold text-dark" id="stat-registered">0</h3>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card shadow-sm border-start border-4 border-warning p-3">
+                                        <h6 class="text-muted fw-bold small mb-1">PENDING VERIFICATION</h6>
+                                        <h3 class="mb-0 fw-bold text-dark" id="stat-pending">0</h3>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card shadow-sm border-start border-4 border-danger p-3">
+                                        <h6 class="text-muted fw-bold small mb-1">ACTIVE LOST REPORTS</h6>
+                                        <h3 class="mb-0 fw-bold text-dark" id="stat-reports">0</h3>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card shadow-sm border-start border-4 border-primary p-3">
+                                        <h6 class="text-muted fw-bold small mb-1">RECOVERED PETS</h6>
+                                        <h3 class="mb-0 fw-bold text-dark" id="stat-recovered">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info d-flex align-items-center shadow-sm">
+                                <i class="fa-solid fa-circle-info fa-2x me-3"></i>
+                                <div>
+                                    <strong>System Status:</strong> All services and database synchronization routines are running normally.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: PET REGISTRATIONS -->
+                        <div class="tab-pane fade" id="v-pills-registrations" role="tabpanel">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-white py-3">
+                                    <h6 class="m-0 fw-bold text-dark"><i class="fa-solid fa-id-card me-2"></i> Pet Registration Queue</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Reg ID</th>
+                                                    <th>Pet Name</th>
+                                                    <th>Owner</th>
+                                                    <th>Type/Breed</th>
+                                                    <th>Age</th>
+                                                    <th>Status</th>
+                                                    <th class="text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="admin-pets-tbody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 3: LOST & FOUND REPORTS -->
+                        <div class="tab-pane fade" id="v-pills-reports" role="tabpanel">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white py-3">
+                                    <h6 class="m-0 fw-bold text-dark"><i class="fa-solid fa-bullhorn me-2"></i> Incident Reports Queue</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Report ID</th>
+                                                    <th>Type</th>
+                                                    <th>Reporter</th>
+                                                    <th>Location</th>
+                                                    <th>Date &amp; Time</th>
+                                                    <th>Status</th>
+                                                    <th>Match Status</th>
+                                                    <th>Remarks</th>
+                                                    <th class="text-end">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="admin-reports-tbody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 4: AUTO-MATCH ENGINE -->
+                        <div class="tab-pane fade" id="v-pills-matches" role="tabpanel">
+                            <div class="card shadow-sm border-primary" style="border-radius: 8px; overflow: hidden;">
+                                <div class="card-header bg-primary text-white py-3 px-4 border-0">
+                                    <h6 class="m-0 fw-bold"><i class="fa-solid fa-robot me-2"></i> Automated Match Verification Engine</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th class="py-3 px-4 fw-bold text-dark">Match Level</th>
+                                                    <th class="py-3 px-4 fw-bold text-dark">Lost Incident</th>
+                                                    <th class="py-3 px-4 fw-bold text-dark">Found Incident</th>
+                                                    <th class="py-3 px-4 fw-bold text-dark">Match Location</th>
+                                                    <th class="py-3 px-4 fw-bold text-dark text-end">Admin Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="admin-matches-tbody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 5: SUMMARY REPORTS -->
+                        <div class="tab-pane fade" id="v-pills-analytics" role="tabpanel">
+                            <div class="card shadow-sm p-4">
+                                <h5 class="fw-bold text-dark mb-1">System Maintenance &amp; Analytics</h5>
+                                <p class="text-muted small mb-3">Manage local storage data or export system logs.</p>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button type="button" onclick="exportRegistrationCSV()" class="btn btn-outline-success">
+                                        <i class="fa-solid fa-file-excel me-2"></i> Export Registration Log
+                                    </button>
+                                    <button type="button" onclick="resetSystemData()" class="btn btn-outline-danger">
+                                        <i class="fa-solid fa-trash-can me-2"></i> Reset System Data (Clear LocalStorage)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW PET PROFILE MODAL -->
+    <div class="modal fade" id="viewPetModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header copet-header">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-paw me-2"></i> Pet Registration Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="viewPetModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const DEFAULT_PETS = [
+            { id: 'REG-696', name: 'Snow', type: 'Dog', breed: 'Aspin', color: 'White', age: '2 years old', owner: 'Andrea Gando Moster', status: 'Approved', image: '' },
+            { id: 'REG-856', name: 'Lana', type: 'Dog', breed: 'Shih Tzu', color: 'White / Brown', age: '2 years old', owner: 'ash', status: 'Pending Review', image: '' },
+            { id: 'REG-968', name: 'Luna', type: 'Dog', breed: 'Labrador', color: 'Cream', age: '11 months', owner: 'Sophia Aldea Sagun', status: 'Approved', image: '' },
+            { id: 'REG-276', name: 'Coco', type: 'Dog', breed: 'Dachshund', color: 'Brown', age: '5 months', owner: 'Erlene Joy Aldea Sagun', status: 'Approved', image: '' }
+        ];
+
+        const DEFAULT_REPORTS = [
+            { id: '#FND-557', type: 'Found', details: 'Luna at Joaquin Cmp', reporter: 'Andrea Gando Moster', location: 'Joaquin Cmp', date: '2026-08-24', time: '19:15', status: 'Active Search', remarks: 'N/A', image: '' },
+            { id: '#LST-913', type: 'Lost', details: 'Luna at Joaquin Cmp', reporter: 'Andrea Gando Moster', location: 'Joaquin Cmp', date: '2026-08-24', time: '18:00', status: 'Active Search', remarks: 'Yellow collar', image: '' }
+        ];
+
+        let currentUser = JSON.parse(localStorage.getItem('copet_current_user')) || { fullName: 'Staff Office', username: 'admin', role: 'admin' };
+        let pets = JSON.parse(localStorage.getItem('copet_pets')) || [...DEFAULT_PETS];
+        let reports = JSON.parse(localStorage.getItem('copet_reports')) || [...DEFAULT_REPORTS];
+        let recoveredCount = parseInt(localStorage.getItem('copet_recovered') || '0', 10);
+
+        document.getElementById('adminHeaderName').innerHTML = `<i class="fa-solid fa-user-shield me-1"></i> Admin: ${currentUser.fullName || 'Staff Office'}`;
+
+        function saveData() {
+            localStorage.setItem('copet_pets', JSON.stringify(pets));
+            localStorage.setItem('copet_reports', JSON.stringify(reports));
+            localStorage.setItem('copet_recovered', recoveredCount.toString());
+            renderAll();
+        }
+
+        function switchModal(targetModalId) {
+            const openModals = document.querySelectorAll('.modal.show');
+            if (openModals.length > 0) {
+                openModals.forEach(m => {
+                    const instance = bootstrap.Modal.getInstance(m);
+                    if (instance) instance.hide();
+                });
+                setTimeout(() => {
+                    const targetEl = document.getElementById(targetModalId);
+                    bootstrap.Modal.getOrCreateInstance(targetEl).show();
+                }, 200);
+            } else {
+                const targetEl = document.getElementById(targetModalId);
+                bootstrap.Modal.getOrCreateInstance(targetEl).show();
+            }
+        }
+
+        function showAlert(elementId, message, type) {
+            const alertBox = document.getElementById(elementId);
+            alertBox.className = `alert alert-${type} py-2 small`;
+            alertBox.textContent = message;
+            alertBox.classList.remove('d-none');
+        }
+
+        function switchView(pageId) {
+            document.querySelectorAll('.modal.show').forEach(modalEl => {
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) modalInstance.hide();
+            });
+
+            document.querySelectorAll('.view-page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+
+            if (pageId === 'landing-page') {
+                document.body.classList.remove('dashboard-mode');
+            } else {
+                document.body.classList.add('dashboard-mode');
+            }
+
+            renderAll();
+            window.scrollTo(0, 0);
+        }
+
+        function logout() {
+            localStorage.removeItem('copet_current_user');
+            switchView('landing-page');
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('copet_current_user');
+            switchView('landing-page');
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve) => {
+                if (!file) { resolve(''); return; }
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => resolve('');
+                reader.readAsDataURL(file);
+            });
+        }
+
+        document.getElementById('loginModal').addEventListener('shown.bs.modal', function () {
+            document.getElementById('adminUsername').value = '';
+            document.getElementById('adminPassword').value = '';
+        });
+
+        document.getElementById('residentSignupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('signupFullName').value.trim();
+            const contact = document.getElementById('signupContact').value.trim();
+            const address = document.getElementById('signupAddress').value.trim();
+            const username = document.getElementById('signupUsername').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+
+            const users = JSON.parse(localStorage.getItem('copet_users') || '[]');
+            if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                showAlert('signupAlert', 'Username is already taken. Please choose another.', 'danger');
+                return;
+            }
+
+            currentUser = { fullName, contact, address, username, password, role: 'resident' };
+            users.push(currentUser);
+            localStorage.setItem('copet_users', JSON.stringify(users));
+            localStorage.setItem('copet_current_user', JSON.stringify(currentUser));
+
+            document.getElementById('residentHeaderName').innerHTML = `<i class="fa-solid fa-user me-1"></i> Resident: ${fullName}`;
+            document.getElementById('signupAlert').classList.add('d-none');
+            this.reset();
+            switchView('resident-portal');
+        });
+
+        document.getElementById('residentLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            const users = JSON.parse(localStorage.getItem('copet_users') || '[]');
+            const matchedUser = users.find(u => u.username === username && u.password === password);
+
+            if (matchedUser) {
+                currentUser = matchedUser;
+                localStorage.setItem('copet_current_user', JSON.stringify(currentUser));
+                document.getElementById('residentHeaderName').innerHTML = `<i class="fa-solid fa-user me-1"></i> Resident: ${currentUser.fullName}`;
+                document.getElementById('loginAlert').classList.add('d-none');
+                this.reset();
+                switchView('resident-portal');
+            } else {
+                showAlert('loginAlert', 'Invalid username or password. Please check your credentials or sign up.', 'danger');
+            }
+        });
+
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value.trim();
+
+            if (!username || !password) {
+                showAlert('loginAlert', 'Please enter your admin username and password.', 'danger');
+                return;
+            }
+
+            currentUser = { fullName: username, username: username, role: 'admin' };
+            localStorage.setItem('copet_current_user', JSON.stringify(currentUser));
+            document.getElementById('adminHeaderName').innerHTML = `<i class="fa-solid fa-user-shield me-1"></i> Admin: ${username}`;
+            document.getElementById('loginAlert').classList.add('d-none');
+            this.reset();
+            switchView('admin-portal');
+        });
+
+        async function handleRegisterPet(e) {
+            e.preventDefault();
+            const imageFile = document.getElementById('reg_pet_image').files[0];
+            const imageData = await readFileAsDataURL(imageFile);
+
+            const newPet = {
+                id: 'REG-' + Math.floor(100 + Math.random() * 900),
+                name: document.getElementById('reg_pet_name').value.trim(),
+                type: document.getElementById('reg_pet_type').value,
+                breed: document.getElementById('reg_pet_breed').value.trim(),
+                color: document.getElementById('reg_pet_color').value.trim(),
+                age: document.getElementById('reg_pet_age').value.trim(),
+                owner: currentUser.fullName,
+                status: 'Pending Review',
+                image: imageData
+            };
+            pets.unshift(newPet);
+            document.getElementById('addPetForm').reset();
+            saveData();
+            alert('Pet registration submitted successfully!');
+            document.getElementById('u-mypets-tab').click();
+        }
+
+        async function handleFileReport(e) {
+            e.preventDefault();
+            const repType = document.getElementById('rep_type').value;
+            const prefix = repType === 'Lost' ? '#LST-' : '#FND-';
+            const imageFile = document.getElementById('rep_image').files[0];
+            const imageData = await readFileAsDataURL(imageFile);
+
+            const newReport = {
+                id: prefix + Math.floor(100 + Math.random() * 900),
+                type: repType,
+                details: document.getElementById('rep_details').value.trim(),
+                reporter: currentUser.fullName,
+                location: document.getElementById('rep_location').value.trim(),
+                date: document.getElementById('rep_date').value,
+                time: document.getElementById('rep_time').value,
+                status: 'Active Search',
+                remarks: document.getElementById('rep_remarks').value.trim() || 'N/A',
+                image: imageData
+            };
+            reports.unshift(newReport);
+            document.getElementById('addReportForm').reset();
+            saveData();
+            alert('Incident report submitted successfully!');
+            document.getElementById('u-reports-tab').click();
+        }
+
+        function updatePetStatus(id, newStatus) {
+            const pet = pets.find(p => p.id === id);
+            if (pet) {
+                pet.status = newStatus;
+                saveData();
+            }
+        }
+
+        function deletePetRecord(id) {
+            if (confirm('Are you sure you want to delete this pet record?')) {
+                pets = pets.filter(p => p.id !== id);
+                saveData();
+            }
+        }
+
+        function deleteReportRecord(id) {
+            if (confirm('Are you sure you want to delete this incident report?')) {
+                reports = reports.filter(r => r.id !== id);
+                saveData();
+            }
+        }
+
+        function viewPetDetails(id) {
+            const pet = pets.find(p => p.id === id);
+            if (!pet) return;
+            const imgHtml = pet.image
+                ? `<img src="${pet.image}" class="img-fluid rounded mb-3" style="max-height:220px; width:100%; object-fit:cover;">`
+                : `<div class="bg-light border rounded p-4 text-center text-muted mb-3"><i class="fa-solid fa-paw fa-2x mb-2 d-block"></i>No Image Uploaded</div>`;
+
+            document.getElementById('viewPetModalBody').innerHTML = `
+                ${imgHtml}
+                <table class="table table-sm table-bordered mb-0">
+                    <tr><th class="bg-light w-35">Registration ID</th><td><strong>${pet.id}</strong></td></tr>
+                    <tr><th class="bg-light">Pet Name</th><td>${pet.name}</td></tr>
+                    <tr><th class="bg-light">Owner</th><td>${pet.owner}</td></tr>
+                    <tr><th class="bg-light">Type / Breed</th><td>${pet.type} / ${pet.breed}</td></tr>
+                    <tr><th class="bg-light">Color</th><td>${pet.color}</td></tr>
+                    <tr><th class="bg-light">Age</th><td>${pet.age || 'N/A'}</td></tr>
+                    <tr><th class="bg-light">Status</th><td><span class="badge bg-${pet.status === 'Approved' ? 'success' : (pet.status === 'Rejected' ? 'danger' : 'warning text-dark')}">${pet.status}</span></td></tr>
+                </table>
+            `;
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('viewPetModal')).show();
+        }
+
+        function computeMatches() {
+            const lostReports = reports.filter(r => r.type === 'Lost' && r.status !== 'Recovered');
+            const foundReports = reports.filter(r => r.type === 'Found' && r.status !== 'Recovered');
+            const matches = [];
+
+            lostReports.forEach(lost => {
+                foundReports.forEach(found => {
+                    const sameLocation = lost.location.toLowerCase().trim() === found.location.toLowerCase().trim();
+                    const similarDetails = lost.details.toLowerCase().includes(found.details.toLowerCase()) ||
+                                           found.details.toLowerCase().includes(lost.details.toLowerCase());
+                    if (sameLocation || similarDetails) {
+                        const petName = lost.details.split(' at ')[0].trim();
+                        matches.push({
+                            matchLevel: sameLocation && similarDetails ? 'High Match Level' : 'Potential Match',
+                            lost,
+                            found,
+                            petName,
+                            location: lost.location || found.location
+                        });
+                    }
+                });
+            });
+            return matches;
+        }
+
+        function confirmMatch(lostId, foundId) {
+            reports = reports.map(r => (r.id === lostId || r.id === foundId) ? { ...r, status: 'Recovered' } : r);
+            recoveredCount += 1;
+            saveData();
+            alert('Both incidents resolved and matched! Pet status updated to Recovered.');
+        }
+
+        function exportRegistrationCSV() {
+            const headers = ['Reg ID', 'Pet Name', 'Owner', 'Type', 'Breed', 'Color', 'Age', 'Status'];
+            const rows = pets.map(p => [p.id, p.name, p.owner, p.type, p.breed, p.color, p.age || '', p.status]);
+            const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].map(e => e.map(v => `"${v}"`).join(',')).join('\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', 'CoPet_Registration_Log.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function resetSystemData() {
+            if (confirm('WARNING: ALL saved data in LocalStorage will be erased. Continue?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function renderAdmin() {
+            const matches = computeMatches();
+            const matchedIds = new Set(matches.flatMap(m => [m.lost.id, m.found.id]));
+
+            document.getElementById('stat-registered').innerText = pets.filter(p => p.status === 'Approved').length;
+            document.getElementById('stat-pending').innerText = pets.filter(p => p.status === 'Pending Review').length;
+            document.getElementById('stat-reports').innerText = reports.filter(r => r.type === 'Lost' && r.status === 'Active Search').length;
+            document.getElementById('stat-recovered').innerText = recoveredCount;
+
+            document.getElementById('admin-pets-tbody').innerHTML = pets.map(p => `
+                <tr>
+                    <td><strong>${p.id}</strong></td>
+                    <td>${p.name}</td>
+                    <td>${p.owner}</td>
+                    <td>${p.type} / ${p.breed}</td>
+                    <td>${p.age || 'N/A'}</td>
+                    <td><span class="badge bg-${p.status === 'Approved' ? 'success' : (p.status === 'Rejected' ? 'danger' : 'warning text-dark')}">${p.status}</span></td>
+                    <td class="text-end">
+                        <button onclick="viewPetDetails('${p.id}')" class="btn btn-sm btn-info text-white me-1"><i class="fa-solid fa-eye"></i> View</button>
+                        ${p.status === 'Pending Review' ? `
+                            <button onclick="updatePetStatus('${p.id}', 'Approved')" class="btn btn-sm btn-success me-1" title="Approve"><i class="fa-solid fa-check"></i></button>
+                            <button onclick="updatePetStatus('${p.id}', 'Rejected')" class="btn btn-sm btn-warning text-dark me-1" title="Reject"><i class="fa-solid fa-xmark"></i></button>
+                        ` : ''}
+                        <button onclick="deletePetRecord('${p.id}')" class="btn btn-sm btn-danger" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('admin-reports-tbody').innerHTML = reports.map(r => `
+                <tr>
+                    <td><strong>${r.id}</strong></td>
+                    <td><span class="badge bg-${r.type === 'Lost' ? 'danger' : 'success'}">${r.type}</span></td>
+                    <td>${r.reporter}</td>
+                    <td>${r.location}</td>
+                    <td><small>${r.date}<br><i class="fa-regular fa-clock"></i> ${r.time || '00:00'}</small></td>
+                    <td><span class="badge bg-${r.status === 'Recovered' ? 'success' : 'warning text-dark'}">${r.status}</span></td>
+                    <td>${matchedIds.has(r.id) ? '<span class="badge bg-info text-dark"><i class="fa-solid fa-bell me-1"></i>Match Found</span>' : '<span class="text-muted small">Pending</span>'}</td>
+                    <td>${r.remarks || 'N/A'}</td>
+                    <td class="text-end">
+                        <button onclick="deleteReportRecord('${r.id}')" class="btn btn-sm btn-danger" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('admin-matches-tbody').innerHTML = matches.length ? matches.map(m => `
+                <tr>
+                    <td class="py-4 px-4">
+                        <span class="badge bg-success px-3 py-2">${m.matchLevel}</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="fw-bold text-dark mb-1">${m.lost.id}</div>
+                        <div class="text-muted small">${m.petName} (${m.lost.reporter})</div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="fw-bold text-dark mb-1">${m.found.id}</div>
+                        <div class="text-muted small">${m.petName} (${m.found.reporter})</div>
+                    </td>
+                    <td class="py-4 px-4 text-dark">${m.location}</td>
+                    <td class="py-4 px-4 text-end">
+                        <button class="btn btn-success px-3 py-2" onclick="confirmMatch('${m.lost.id}', '${m.found.id}')">
+                            <i class="fa-solid fa-check me-1"></i> Resolve &amp; Match Both
+                        </button>
+                    </td>
+                </tr>
+            `).join('') : '<tr><td colspan="5" class="text-center text-muted py-4">No active automated matches detected.</td></tr>';
+        }
+
+        function renderUser() {
+            const matches = computeMatches();
+            const matchedIds = new Set(matches.flatMap(m => [m.lost.id, m.found.id]));
+
+            document.getElementById('user-reports-tbody').innerHTML = reports.length ? reports.map(r => `
+                <tr>
+                    <td>
+                        ${r.image
+                            ? `<img src="${r.image}" alt="Report Image" class="report-thumb">`
+                            : `<div class="report-thumb-placeholder"><i class="fa-solid fa-paw"></i></div>`}
+                    </td>
+                    <td><strong>${r.id}</strong></td>
+                    <td><span class="badge bg-${r.type === 'Lost' ? 'danger' : 'success'}">${r.type}</span></td>
+                    <td>${r.details}</td>
+                    <td>${r.location}</td>
+                    <td><small>${r.date}<br><i class="fa-regular fa-clock"></i> ${r.time || '00:00'}</small></td>
+                    <td><span class="badge bg-${r.status === 'Recovered' ? 'success' : 'warning text-dark'}">${r.status}</span></td>
+                    <td>${matchedIds.has(r.id) ? '<span class="badge bg-info text-dark"><i class="fa-solid fa-bell me-1"></i>Match Found</span>' : '<span class="text-muted small">Pending</span>'}</td>
+                    <td>${r.remarks || 'N/A'}</td>
+                </tr>
+            `).join('') : '<tr><td colspan="9" class="text-center text-muted py-4">No community reports available.</td></tr>';
+
+            const myPets = pets.filter(p => p.owner === currentUser.fullName);
+            document.getElementById('my-pets-container').innerHTML = myPets.length ? myPets.map(p => `
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h6 class="m-0 fw-bold text-dark"><i class="fa-solid fa-paw me-2"></i> ${p.name} (${p.id})</h6>
+                        <span class="badge bg-${p.status === 'Approved' ? 'success' : (p.status === 'Rejected' ? 'danger' : 'warning text-dark')}">${p.status}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-3">
+                                <div class="pet-img-box">
+                                    ${p.image
+                                        ? `<img src="${p.image}" alt="${p.name}">`
+                                        : `<div class="text-center text-muted"><i class="fa-solid fa-dog fa-3x mb-2 d-block opacity-50"></i><small>${p.name}</small></div>`}
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4"><strong>Type:</strong> ${p.type}</div>
+                                    <div class="col-md-4"><strong>Breed:</strong> ${p.breed}</div>
+                                    <div class="col-md-4"><strong>Color:</strong> ${p.color}</div>
+                                    <div class="col-md-4"><strong>Age:</strong> ${p.age || 'N/A'}</div>
+                                    <div class="col-md-8"><strong>Owner:</strong> ${p.owner}</div>
+                                </div>
+                                <div class="text-end">
+                                    <button onclick="deletePetRecord('${p.id}')" class="btn btn-sm btn-outline-danger">
+                                        <i class="fa-solid fa-trash-can me-1"></i> Delete Pet Record
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('') : '<div class="alert alert-secondary">No registered pets yet. Click <strong>Register New Pet</strong> on the sidebar to add one.</div>';
+
+            const userMatches = matches.filter(m => m.lost.reporter === currentUser.fullName || m.found.reporter === currentUser.fullName);
+            document.getElementById('user-match-badge').innerText = userMatches.length;
+            document.getElementById('user-matches-container').innerHTML = userMatches.length ? userMatches.map(m => `
+                <div class="match-alert-box d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="fa-solid fa-robot fa-2x text-primary mt-1"></i>
+                        <div>
+                            <strong class="text-dark">Auto-Match Found (${m.matchLevel})</strong><br>
+                            <small class="text-muted">Lost Report: <strong>${m.lost.id}</strong> (${m.lost.details})</small><br>
+                            <small class="text-muted">Found Report: <strong>${m.found.id}</strong> (${m.found.details})</small><br>
+                            <small class="text-dark mt-2 d-inline-block">Contact Barangay Office or Reporter (${m.found.reporter}) for verification.</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-primary px-2 py-1">Active Alert</span>
+                </div>
+            `).join('') : '<p class="text-muted mb-0">No automated matches found for your reports yet.</p>';
+        }
+
+        function renderAll() {
+            renderAdmin();
+            renderUser();
+        }
+
+        // Interactive Floating Paws
+        const pawCanvas = document.getElementById('pawCanvas');
+        const pawCount = 36;
+        const paws = [];
+
+        const pawSVG = `
+            <svg class="paw-inner" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 13.5c-2.5 0-4.5 1.8-4.5 4 0 1.4 1.1 2.5 2.5 2.5.8 0 1.5-.3 2-.3s1.2.3 2 .3c1.4 0 2.5-1.1 2.5-2.5 0-2.2-2-4-4.5-4zm-5.5-2c1.1 0 2-1.1 2-2.5S7.6 6.5 6.5 6.5s-2 1.1-2 2.5.9 2.5 2 2.5zm11 0c1.1 0 2-1.1 2-2.5s-.9-2.5-2-2.5-2 1.1-2 2.5.9 2.5 2 2.5zM9.5 8.5c1.1 0 2-1.1 2-2.5S10.6 3.5 9.5 3.5s-2 1.1-2 2.5.9 2.5 2 2.5zm5 0c1.1 0 2-1.1 2-2.5s-.9-2.5-2-2.5-2 1.1-2 2.5.9 2.5 2 2.5z"/>
+            </svg>
+        `;
+
+        for (let i = 0; i < pawCount; i++) {
+            const paw = document.createElement('div');
+            paw.classList.add('floating-paw');
+            paw.innerHTML = pawSVG;
+
+            const size = Math.floor(Math.random() * 24) + 22;
+            const x = (i / pawCount) * 94 + (Math.random() * 4);
+            const y = Math.random() * 92 + 4;
+            const baseRotate = Math.floor(Math.random() * 70) - 35;
+            const duration = (Math.random() * 3 + 4).toFixed(1) + 's';
+            const delay = (Math.random() * 2).toFixed(1) + 's';
+
+            paw.style.fontSize = `${size}px`;
+            paw.style.left = `${x}%`;
+            paw.style.top = `${y}%`;
+            paw.style.transform = `rotate(${baseRotate}deg)`;
+            paw.style.setProperty('--float-duration', duration);
+            paw.style.setProperty('--float-delay', delay);
+
+            pawCanvas.appendChild(paw);
+            paws.push({ el: paw, baseRotate });
+        }
+
+        function updatePaws(clientX, clientY) {
+            if (document.body.classList.contains('dashboard-mode')) return;
+            paws.forEach((item) => {
+                const pawRect = item.el.getBoundingClientRect();
+                const pawCenterX = pawRect.left + pawRect.width / 2;
+                const pawCenterY = pawRect.top + pawRect.height / 2;
+
+                const deltaX = clientX - pawCenterX;
+                const deltaY = clientY - pawCenterY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const radius = 150;
+
+                if (distance < radius) {
+                    const force = (radius - distance) / radius;
+                    const moveX = -(deltaX * force * 0.28);
+                    const moveY = -(deltaY * force * 0.28);
+                    item.el.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${item.baseRotate + 16}deg) scale(1.18)`;
+                    item.el.classList.add('active');
+                } else {
+                    item.el.style.transform = `translate(0px, 0px) rotate(${item.baseRotate}deg) scale(1)`;
+                    item.el.classList.remove('active');
+                }
+            });
+        }
+
+        function resetPaws() {
+            paws.forEach((item) => {
+                item.el.style.transform = `translate(0px, 0px) rotate(${item.baseRotate}deg) scale(1)`;
+                item.el.classList.remove('active');
+            });
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            updatePaws(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                updatePaws(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        document.addEventListener('mouseleave', resetPaws);
+        window.addEventListener('touchend', resetPaws);
+
+        document.addEventListener('DOMContentLoaded', renderAll);
+    </script>
+</body>
+</html>

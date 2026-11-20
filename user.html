@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoPet - Resident Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(180deg, #0d7a66 0%, #095859 48%, #1e1b4b 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Top Header Glass Style */
+        .copet-header {
+            background-color: rgba(13, 122, 102, 0.55);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+            color: white;
+            z-index: 1050 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+        }
+        .copet-header > div {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .btn-glass {
+            background-color: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: #ffffff;
+            transition: all 0.25s ease;
+        }
+        .btn-glass:hover {
+            background-color: rgba(255, 255, 255, 0.24);
+            border-color: rgba(255, 255, 255, 0.65);
+            color: #ffffff;
+        }
+
+        /* Interactive Floating Paws */
+        #pawCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .floating-paw {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.09);
+            pointer-events: none;
+            will-change: transform, color, filter;
+            transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease, filter 0.3s ease;
+        }
+        .floating-paw.active {
+            color: rgba(255, 193, 7, 0.75);
+            filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.6));
+        }
+        @keyframes gentleFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(5deg); }
+        }
+        .paw-inner {
+            animation: gentleFloat var(--float-duration, 5s) ease-in-out infinite;
+            animation-delay: var(--float-delay, 0s);
+        }
+
+        .sidebar, main {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Frosted Glass Sidebar */
+        .sidebar {
+            min-height: calc(100vh - 66px);
+            background-color: rgba(10, 35, 42, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.78);
+            font-weight: 500;
+            padding: 14px 20px;
+            cursor: pointer;
+            border-radius: 0;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding-left: 25px;
+        }
+        .sidebar .nav-link i {
+            width: 22px;
+            text-align: center;
+            margin-right: 8px;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.65);
+        }
+        .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.16);
+            color: #ffffff;
+            font-weight: bold;
+            border-left: 4px solid #ffc107;
+        }
+        .sidebar .nav-link.active i {
+            color: #ffc107;
+        }
+
+        /* Transparent Glass Panels & Tables */
+        .glass-panel {
+            background-color: rgba(255, 255, 255, 0.09);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 14px;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        .glass-panel .card-header {
+            background-color: rgba(255, 255, 255, 0.12) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+            color: #ffffff !important;
+        }
+        .glass-panel .card-header.match-header {
+            background-color: rgba(13, 110, 253, 0.45) !important;
+        }
+
+        .glass-table {
+            --bs-table-bg: transparent;
+            --bs-table-color: #ffffff;
+            --bs-table-border-color: rgba(255, 255, 255, 0.14);
+            --bs-table-hover-bg: rgba(255, 255, 255, 0.1);
+            --bs-table-hover-color: #ffffff;
+            color: #ffffff;
+            margin-bottom: 0;
+        }
+        .glass-table thead th {
+            background-color: rgba(10, 35, 42, 0.45) !important;
+            color: rgba(255, 255, 255, 0.92) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+            font-size: 0.88rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            text-align: center !important;
+        }
+        .glass-table tbody td {
+            background-color: transparent !important;
+            color: #ffffff !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            text-align: center !important;
+        }
+
+        /* Glass Form Controls */
+        .glass-input,
+        .glass-panel .form-control,
+        .glass-panel .form-select {
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            color: #ffffff;
+        }
+        .glass-panel .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.55);
+        }
+        .glass-panel .form-control:focus,
+        .glass-panel .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.18);
+            border-color: #ffc107;
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+            color: #ffffff;
+        }
+        .glass-panel .form-select option {
+            background-color: #0f2933;
+            color: #ffffff;
+        }
+        .glass-panel .form-control[type="file"]::file-selector-button {
+            background-color: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+            border: none;
+            border-right: 1px solid rgba(255, 255, 255, 0.28);
+        }
+
+        /* Pet Cards & Thumbnails */
+        .pet-img-box {
+            width: 100%;
+            height: 190px;
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pet-img-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        .report-thumb {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+        }
+        .report-thumb-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px dashed rgba(255, 255, 255, 0.35);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+        }
+
+        .match-alert-box {
+            background-color: rgba(13, 110, 253, 0.22);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(110, 168, 254, 0.45);
+            border-radius: 12px;
+            padding: 18px 20px;
+            color: #ffffff;
+        }
+
+        .tab-pane.active {
+            animation: fadeSlideUp 0.3s ease;
+        }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="pawCanvas"></div>
+
+    <!-- Top Navigation Bar -->
+    <nav class="copet-header py-3 shadow-sm sticky-top">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <i class="fa-solid fa-paw fa-2x"></i>
+                <div>
+                    <h5 class="m-0 fw-bold">CoPet Community Portal</h5>
+                    <small class="text-white-50">Barangay Alabang Pet Registration &amp; Tracking System</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-light text-dark px-3 py-2" id="residentHeaderName"><i class="fa-solid fa-user me-1"></i></span>
+                <button type="button" onclick="logoutUser()" class="btn btn-glass btn-sm fw-bold px-3"><i class="fa-solid fa-right-from-bracket me-1"></i> Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Navigation Buttons -->
+            <div class="col-md-3 col-lg-2 sidebar p-0">
+                <div class="nav flex-column nav-pills mt-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    <button class="nav-link active text-start" id="v-pills-allreports-tab" data-bs-toggle="pill" data-bs-target="#v-pills-allreports" type="button" role="tab"><i class="fa-solid fa-bullhorn"></i> Community Reports</button>
+                    <button class="nav-link text-start" id="v-pills-mypets-tab" data-bs-toggle="pill" data-bs-target="#v-pills-mypets" type="button" role="tab"><i class="fa-solid fa-dog"></i> My Registered Pets</button>
+                    <button class="nav-link text-start" id="v-pills-addpet-tab" data-bs-toggle="pill" data-bs-target="#v-pills-addpet" type="button" role="tab"><i class="fa-solid fa-circle-plus"></i> Register New Pet</button>
+                    <button class="nav-link text-start" id="v-pills-report-tab" data-bs-toggle="pill" data-bs-target="#v-pills-report" type="button" role="tab"><i class="fa-solid fa-triangle-exclamation"></i> Report Incident</button>
+                    <button class="nav-link text-start" id="v-pills-matches-tab" data-bs-toggle="pill" data-bs-target="#v-pills-matches" type="button" role="tab"><i class="fa-solid fa-bell"></i> Match Alerts <span class="badge bg-danger ms-1" id="user-match-badge">0</span></button>
+                </div>
+            </div>
+
+            <!-- Dynamic Tab Content Area -->
+            <main class="col-md-9 col-lg-10 ms-sm-auto px-md-4 py-4">
+                <div class="tab-content" id="v-pills-tabContent">
+                    
+                    <!-- TAB 1: ALL COMMUNITY INCIDENT REPORTS -->
+                    <div class="tab-pane fade show active" id="v-pills-allreports" role="tabpanel">
+                        <div class="card glass-panel shadow">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <span style="width: 120px;" class="d-none d-md-inline-block"></span>
+                                <h6 class="m-0 fw-bold text-white text-center flex-grow-1"><i class="fa-solid fa-bullhorn me-2 text-warning"></i> Barangay Community Incident Feed</h6>
+                                <button class="btn btn-sm btn-danger fw-bold" onclick="document.getElementById('v-pills-report-tab').click()"><i class="fa-solid fa-plus me-1"></i> File New Report</button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table glass-table table-hover align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th class="py-3 text-center">Image</th>
+                                                <th class="py-3 text-center">Report ID</th>
+                                                <th class="py-3 text-center">Type</th>
+                                                <th class="py-3 text-center">Details</th>
+                                                <th class="py-3 text-center">Location</th>
+                                                <th class="py-3 text-center">Date &amp; Time</th>
+                                                <th class="py-3 text-center">Status</th>
+                                                <th class="py-3 text-center">Match Status</th>
+                                                <th class="py-3 text-center">Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="user-reports-tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: MY REGISTERED PETS -->
+                    <div class="tab-pane fade" id="v-pills-mypets" role="tabpanel">
+                        <div id="my-pets-container"></div>
+                    </div>
+
+                    <!-- TAB 3: REGISTER NEW PET -->
+                    <div class="tab-pane fade" id="v-pills-addpet" role="tabpanel">
+                        <div class="card glass-panel shadow">
+                            <div class="card-header py-3 text-center">
+                                <h6 class="m-0 fw-bold text-white"><i class="fa-solid fa-shield-cat me-2 text-warning"></i> Register New Pet Form</h6>
+                            </div>
+                            <div class="card-body p-4">
+                                <form id="addPetForm" onsubmit="handleRegisterPet(event)">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label text-white-50 small fw-bold">PET NAME</label>
+                                            <input type="text" id="reg_pet_name" class="form-control" placeholder="e.g. Brownie" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label text-white-50 small fw-bold">PET TYPE</label>
+                                            <select id="reg_pet_type" class="form-select" required>
+                                                <option value="Dog">Dog</option>
+                                                <option value="Cat">Cat</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label text-white-50 small fw-bold">BREED</label>
+                                            <input type="text" id="reg_pet_breed" class="form-control" placeholder="e.g. Shih Tzu" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label text-white-50 small fw-bold">COLOR</label>
+                                            <input type="text" id="reg_pet_color" class="form-control" placeholder="e.g. White / Brown" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label text-white-50 small fw-bold">AGE</label>
+                                            <input type="text" id="reg_pet_age" class="form-control" placeholder="e.g. 2 yrs / 6 mos" required>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label text-white-50 small fw-bold">UPLOAD PET PICTURE</label>
+                                            <input type="file" id="reg_pet_image" class="form-control" accept="image/*">
+                                        </div>
+                                        <div class="col-md-12 text-end mt-4">
+                                            <button type="submit" class="btn btn-success fw-bold px-4"><i class="fa-solid fa-paper-plane me-1"></i> Submit Registration</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: REPORT INCIDENT -->
+                    <div class="tab-pane fade" id="v-pills-report" role="tabpanel">
+                        <div class="card glass-panel shadow">
+                            <div class="card-header py-3 text-center">
+                                <h6 class="m-0 fw-bold text-white"><i class="fa-solid fa-bullhorn me-2 text-warning"></i> File Incident Report</h6>
+                            </div>
+                            <div class="card-body p-4">
+                                <form id="addReportForm" onsubmit="handleFileReport(event)">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label text-white-50 small fw-bold">REPORT TYPE</label>
+                                            <select id="rep_type" class="form-select">
+                                                <option value="Lost">Lost Pet Report</option>
+                                                <option value="Found">Found Pet Report</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label text-white-50 small fw-bold">PET NAME / DETAILS</label>
+                                            <input type="text" id="rep_details" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label text-white-50 small fw-bold">LAST SEEN LOCATION</label>
+                                            <input type="text" id="rep_location" class="form-control"required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label text-white-50 small fw-bold">INCIDENT DATE</label>
+                                            <input type="date" id="rep_date" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label text-white-50 small fw-bold">INCIDENT TIME</label>
+                                            <input type="time" id="rep_time" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label text-white-50 small fw-bold">UPLOAD INCIDENT IMAGE</label>
+                                            <input type="file" id="rep_image" class="form-control" accept="image/*">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label text-white-50 small fw-bold">REMARKS / ADDITIONAL NOTES</label>
+                                            <textarea id="rep_remarks" class="form-control" rows="3" placeholder="e.g. Wearing a red collar..."></textarea>
+                                        </div>
+                                        <div class="col-md-12 text-end mt-4">
+                                            <button type="submit" class="btn btn-danger fw-bold px-4"><i class="fa-solid fa-paper-plane me-1"></i> Submit Report</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 5: MATCH ALERTS -->
+                    <div class="tab-pane fade" id="v-pills-matches" role="tabpanel">
+                        <div class="card glass-panel shadow">
+                            <div class="card-header match-header py-3 text-center">
+                                <h6 class="m-0 fw-bold text-white"><i class="fa-solid fa-robot me-2 text-warning"></i> Automated System Matches Found</h6>
+                            </div>
+                            <div class="card-body p-4" id="user-matches-container"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('copet_current_user'));
+        if (!currentUser || currentUser.role !== 'resident') {
+            window.location.href = 'homepage.html';
+        } else {
+            const residentName = currentUser.fullName || currentUser.username;
+            document.getElementById('residentHeaderName').innerHTML = `<i class="fa-solid fa-user me-1"></i> Resident: ${residentName}`;
+        }
+
+        let pets = JSON.parse(localStorage.getItem('copet_pets')) || [];
+        let reports = JSON.parse(localStorage.getItem('copet_reports')) || [];
+
+        function saveData() {
+            localStorage.setItem('copet_pets', JSON.stringify(pets));
+            localStorage.setItem('copet_reports', JSON.stringify(reports));
+            renderUser();
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('copet_current_user');
+            window.location.href = 'homepage.html';
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve) => {
+                if (!file) { resolve(''); return; }
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => resolve('');
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleRegisterPet(e) {
+            e.preventDefault();
+            const imageFile = document.getElementById('reg_pet_image').files[0];
+            const imageData = await readFileAsDataURL(imageFile);
+            const ownerName = currentUser.fullName || currentUser.username;
+
+            const newPet = {
+                id: 'REG-' + Math.floor(100 + Math.random() * 900),
+                name: document.getElementById('reg_pet_name').value.trim(),
+                type: document.getElementById('reg_pet_type').value,
+                breed: document.getElementById('reg_pet_breed').value.trim(),
+                color: document.getElementById('reg_pet_color').value.trim(),
+                age: document.getElementById('reg_pet_age').value.trim(),
+                owner: ownerName,
+                status: 'Pending Review',
+                image: imageData
+            };
+            pets.unshift(newPet);
+            document.getElementById('addPetForm').reset();
+            saveData();
+            alert('Pet registration submitted successfully!');
+            document.getElementById('v-pills-mypets-tab').click();
+        }
+
+        async function handleFileReport(e) {
+            e.preventDefault();
+            const repType = document.getElementById('rep_type').value;
+            const prefix = repType === 'Lost' ? '#LST-' : '#FND-';
+            const imageFile = document.getElementById('rep_image').files[0];
+            const imageData = await readFileAsDataURL(imageFile);
+            const reporterName = currentUser.fullName || currentUser.username;
+
+            const newReport = {
+                id: prefix + Math.floor(100 + Math.random() * 900),
+                type: repType,
+                details: document.getElementById('rep_details').value.trim(),
+                reporter: reporterName,
+                location: document.getElementById('rep_location').value.trim(),
+                date: document.getElementById('rep_date').value,
+                time: document.getElementById('rep_time').value,
+                status: 'Active Search',
+                remarks: document.getElementById('rep_remarks').value.trim() || 'N/A',
+                image: imageData
+            };
+            reports.unshift(newReport);
+            document.getElementById('addReportForm').reset();
+            saveData();
+            alert('Incident report submitted successfully!');
+            document.getElementById('v-pills-allreports-tab').click();
+        }
+
+        function deletePetRecord(id) {
+            if (confirm('Are you sure you want to delete this pet record?')) {
+                pets = pets.filter(p => p.id !== id);
+                saveData();
+            }
+        }
+
+        function computeMatches() {
+            const lostReports = reports.filter(r => r.type === 'Lost' && r.status !== 'Recovered');
+            const foundReports = reports.filter(r => r.type === 'Found' && r.status !== 'Recovered');
+            const matches = [];
+
+            lostReports.forEach(lost => {
+                foundReports.forEach(found => {
+                    const sameLocation = lost.location.toLowerCase().trim() === found.location.toLowerCase().trim();
+                    const similarDetails = lost.details.toLowerCase().includes(found.details.toLowerCase()) ||
+                                           found.details.toLowerCase().includes(lost.details.toLowerCase());
+                    if (sameLocation || similarDetails) {
+                        matches.push({
+                            matchLevel: sameLocation && similarDetails ? 'High Match Level' : 'Potential Match',
+                            lost,
+                            found
+                        });
+                    }
+                });
+            });
+            return matches;
+        }
+
+        function renderUser() {
+            const matches = computeMatches();
+            const matchedIds = new Set(matches.flatMap(m => [m.lost.id, m.found.id]));
+            const residentName = currentUser.fullName || currentUser.username;
+
+            document.getElementById('user-reports-tbody').innerHTML = reports.length ? reports.map(r => `
+                <tr>
+                    <td class="text-center">
+                        ${r.image
+                            ? `<img src="${r.image}" alt="Report Image" class="report-thumb">`
+                            : `<div class="report-thumb-placeholder"><i class="fa-solid fa-paw"></i></div>`}
+                    </td>
+                    <td class="text-center"><strong>${r.id}</strong></td>
+                    <td class="text-center"><span class="badge bg-${r.type === 'Lost' ? 'danger' : 'success'}">${r.type}</span></td>
+                    <td class="text-center">${r.details}</td>
+                    <td class="text-center">${r.location}</td>
+                    <td class="text-center"><small>${r.date}<br><i class="fa-regular fa-clock"></i> ${r.time || '00:00'}</small></td>
+                    <td class="text-center"><span class="badge bg-${r.status === 'Recovered' ? 'success' : 'warning text-dark'}">${r.status}</span></td>
+                    <td class="text-center">${matchedIds.has(r.id) ? '<span class="badge bg-info text-dark"><i class="fa-solid fa-bell me-1"></i>Match Found</span>' : '<span class="text-white-50 small">Pending</span>'}</td>
+                    <td class="text-center">${r.remarks || 'N/A'}</td>
+                </tr>
+            `).join('') : '<tr><td colspan="9" class="text-center text-white-50 py-4">No community reports available.</td></tr>';
+
+            const myPets = pets.filter(p => p.owner === residentName);
+            document.getElementById('my-pets-container').innerHTML = myPets.length ? myPets.map(p => `
+                <div class="card glass-panel shadow mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center py-3">
+                        <h6 class="m-0 fw-bold text-white"><i class="fa-solid fa-paw me-2 text-warning"></i> ${p.name} (${p.id})</h6>
+                        <span class="badge bg-${p.status === 'Approved' ? 'success' : (p.status === 'Rejected' ? 'danger' : 'warning text-dark')}">${p.status}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-3">
+                                <div class="pet-img-box">
+                                    ${p.image
+                                        ? `<img src="${p.image}" alt="${p.name}">`
+                                        : `<div class="text-center text-white-50"><i class="fa-solid fa-dog fa-3x mb-2 d-block opacity-50"></i><small>${p.name}</small></div>`}
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4"><strong class="text-white-50">Type:</strong> ${p.type}</div>
+                                    <div class="col-md-4"><strong class="text-white-50">Breed:</strong> ${p.breed}</div>
+                                    <div class="col-md-4"><strong class="text-white-50">Color:</strong> ${p.color}</div>
+                                    <div class="col-md-4"><strong class="text-white-50">Age:</strong> ${p.age || 'N/A'}</div>
+                                    <div class="col-md-8"><strong class="text-white-50">Owner:</strong> ${p.owner}</div>
+                                </div>
+                                <div class="text-end">
+                                    <button onclick="deletePetRecord('${p.id}')" class="btn btn-sm btn-outline-danger">
+                                        <i class="fa-solid fa-trash-can me-1"></i> Delete Pet Record
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('') : '<div class="glass-panel p-4 text-center text-white-50">No registered pets yet. Click <strong class="text-white">Register New Pet</strong> on the sidebar to add one.</div>';
+
+            const userMatches = matches.filter(m => m.lost.reporter === residentName || m.found.reporter === residentName);
+            document.getElementById('user-match-badge').innerText = userMatches.length;
+            document.getElementById('user-matches-container').innerHTML = userMatches.length ? userMatches.map(m => `
+                <div class="match-alert-box d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="fa-solid fa-robot fa-2x text-warning mt-1"></i>
+                        <div>
+                            <strong class="text-white">Auto-Match Found (${m.matchLevel})</strong><br>
+                            <small class="text-white-50">Lost Report: <strong class="text-white">${m.lost.id}</strong> (${m.lost.details})</small><br>
+                            <small class="text-white-50">Found Report: <strong class="text-white">${m.found.id}</strong> (${m.found.details})</small><br>
+                            <small class="text-white mt-2 d-inline-block">Contact Barangay Office or Reporter (${m.found.reporter}) for verification.</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-primary px-2 py-1">Active Alert</span>
+                </div>
+            `).join('') : '<p class="text-white-50 text-center mb-0">No automated matches found for your reports yet.</p>';
+        }
+
+        // Interactive Floating Paws
+        const pawCanvas = document.getElementById('pawCanvas');
+        const pawCount = 34;
+        const paws = [];
+
+        const pawSVG = `
+            <svg class="paw-inner" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 13.5c-2.5 0-4.5 1.8-4.5 4 0 1.4 1.1 2.5 2.5 2.5.8 0 1.5-.3 2-.3s1.2.3 2 .3c1.4 0 2.5-1.1 2.5-2.5 0-2.2-2-4-4.5-4zm-5.5-2c1.1 0 2-1.1 2-2.5S7.6 6.5 6.5 6.5s-2 1.1-2 2.5.9 2.5 2 2.5zm11 0c1.1 0 2-1.1 2-2.5s-.9-2.5-2-2.5-2 1.1-2 2.5.9 2.5 2 2.5zM9.5 8.5c1.1 0 2-1.1 2-2.5S10.6 3.5 9.5 3.5s-2 1.1-2 2.5.9 2.5 2 2.5zm5 0c1.1 0 2-1.1 2-2.5s-.9-2.5-2-2.5-2 1.1-2 2.5.9 2.5 2 2.5z"/>
+            </svg>
+        `;
+
+        for (let i = 0; i < pawCount; i++) {
+            const paw = document.createElement('div');
+            paw.classList.add('floating-paw');
+            paw.innerHTML = pawSVG;
+
+            const size = Math.floor(Math.random() * 24) + 22;
+            const x = (i / pawCount) * 94 + (Math.random() * 4);
+            const y = Math.random() * 92 + 4;
+            const baseRotate = Math.floor(Math.random() * 70) - 35;
+            const duration = (Math.random() * 3 + 4).toFixed(1) + 's';
+            const delay = (Math.random() * 2).toFixed(1) + 's';
+
+            paw.style.fontSize = `${size}px`;
+            paw.style.left = `${x}%`;
+            paw.style.top = `${y}%`;
+            paw.style.transform = `rotate(${baseRotate}deg)`;
+            paw.style.setProperty('--float-duration', duration);
+            paw.style.setProperty('--float-delay', delay);
+
+            pawCanvas.appendChild(paw);
+            paws.push({ el: paw, baseRotate });
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            paws.forEach((item) => {
+                const pawRect = item.el.getBoundingClientRect();
+                const pawCenterX = pawRect.left + pawRect.width / 2;
+                const pawCenterY = pawRect.top + pawRect.height / 2;
+
+                const deltaX = e.clientX - pawCenterX;
+                const deltaY = e.clientY - pawCenterY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const radius = 150;
+
+                if (distance < radius) {
+                    const force = (radius - distance) / radius;
+                    const moveX = -(deltaX * force * 0.28);
+                    const moveY = -(deltaY * force * 0.28);
+                    item.el.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${item.baseRotate + 16}deg) scale(1.18)`;
+                    item.el.classList.add('active');
+                } else {
+                    item.el.style.transform = `translate(0px, 0px) rotate(${item.baseRotate}deg) scale(1)`;
+                    item.el.classList.remove('active');
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', renderUser);
+    </script>
+</body>
+</html>

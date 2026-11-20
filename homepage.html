@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoPet - Barangay Alabang Pet Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            overflow-x: hidden;
+            position: relative;
+            background: linear-gradient(180deg, #0d7a66 0%, #095859 48%, #1e1b4b 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .copet-header { 
+            background-color: rgba(13, 122, 102, 0.45);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            color: white; 
+            z-index: 1030;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+        }
+
+        .copet-header > div {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .hero-section {
+            background: transparent;
+            color: white;
+            padding: 95px 0 70px 0;
+            position: relative;
+            user-select: none;
+        }
+
+        @keyframes radarPulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.25; }
+            100% { transform: translate(-50%, -50%) scale(2.3); opacity: 0; }
+        }
+
+        .radar-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 320px;
+            height: 320px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: radarPulse 6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+        }
+
+        #pawCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .floating-paw {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.09);
+            pointer-events: none;
+            will-change: transform, color, filter;
+            transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease, filter 0.3s ease;
+        }
+
+        .floating-paw.active {
+            color: rgba(255, 193, 7, 0.72);
+            filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.55));
+        }
+
+        @keyframes gentleFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(5deg); }
+        }
+
+        .paw-inner {
+            animation: gentleFloat var(--float-duration, 5s) ease-in-out infinite;
+            animation-delay: var(--float-delay, 0s);
+        }
+
+        .hero-content,
+        .services-section {
+            position: relative;
+            z-index: 10;
+        }
+
+        .services-section {
+            padding-top: 30px;
+            padding-bottom: 80px;
+        }
+
+        .btn-glass {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+        .btn-glass:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.6);
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .feature-card {
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 14px;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #ffffff;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-6px);
+            background-color: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 193, 7, 0.5);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        .glass-modal {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 16px;
+            color: #ffffff;
+        }
+        .glass-modal .modal-header {
+            background: rgba(13, 122, 102, 0.45);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+        .glass-modal .nav-pills .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            margin: 0 4px;
+        }
+        .glass-modal .nav-pills .nav-link.active {
+            background-color: rgba(13, 122, 102, 0.85);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #ffffff;
+        }
+        .glass-modal .input-group-text {
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+        }
+        .glass-modal .form-control {
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+        }
+        .glass-modal .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .glass-modal .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+
+        footer {
+            position: relative;
+            z-index: 10;
+            background-color: rgba(15, 13, 38, 0.8);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="pawCanvas"></div>
+
+    <nav class="copet-header py-3 shadow-sm sticky-top">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <i class="fa-solid fa-paw fa-2x"></i>
+                <div>
+                    <h5 class="m-0 fw-bold">CoPet Management Portal</h5>
+                    <small class="text-white-50">Barangay Alabang Pet Registration &amp; Tracking System</small>
+                </div>
+            </div>
+            <div>
+                <button type="button" class="btn btn-glass fw-bold px-4" onclick="switchModal('loginModal')">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i> Login
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section id="heroSection" class="hero-section text-center">
+        <div class="radar-ring"></div>
+        <div class="radar-ring" style="animation-delay: 3s;"></div>
+
+        <div class="container hero-content">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-3">Welcome to CoPet Alabang</h1>
+                    <p class="lead mb-4 text-white-50">
+                        The official community web platform for registering pets, filing lost &amp; found reports, and automatically matching missing pets within Barangay Alabang.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <button type="button" class="btn btn-glass btn-lg px-4 fw-bold shadow-sm" onclick="switchModal('signupModal')">
+                            <i class="fa-solid fa-user-plus me-2"></i> Sign Up / Create Account
+                        </button>
+                        <button type="button" class="btn btn-glass btn-lg px-4 fw-bold" onclick="switchModal('loginModal')">
+                            <i class="fa-solid fa-bullhorn me-2"></i> Report Lost Pet
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="services-section">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h3 class="fw-bold text-white">Barangay Pet Services</h3>
+                <p class="text-white-50">Built to protect animals and assist residents of Barangay Alabang</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card feature-card shadow p-4 h-100 text-center">
+                        <div class="mb-3">
+                            <i class="fa-solid fa-shield-dog fa-3x text-warning"></i>
+                        </div>
+                        <h5 class="fw-bold text-white">Digital Registration</h5>
+                        <p class="text-white-50 small mb-0">
+                            Register your dogs and cats online with complete profile details stored securely.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card shadow p-4 h-100 text-center">
+                        <div class="mb-3">
+                            <i class="fa-solid fa-magnifying-glass-location fa-3x text-danger"></i>
+                        </div>
+                        <h5 class="fw-bold text-white">Lost &amp; Found Tracking</h5>
+                        <p class="text-white-50 small mb-0">
+                            Instantly upload missing pet details or found animal reports with last-seen locations.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card shadow p-4 h-100 text-center">
+                        <div class="mb-3">
+                            <i class="fa-solid fa-robot fa-3x text-info"></i>
+                        </div>
+                        <h5 class="fw-bold text-white">Automated Matching</h5>
+                        <p class="text-white-50 small mb-0">
+                            Our system automatically cross-references lost and found pet entries.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="text-white py-4">
+        <div class="container text-center">
+            <p class="m-0 small text-white-50">&copy; 2026 CoPet: A Web-Based Community Pet Registration and Lost Pet Tracking System for Barangay Alabang</p>
+        </div>
+    </footer>
+
+    <!-- LOGIN MODAL -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-modal shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-white" id="loginModalLabel"><i class="fa-solid fa-paw me-2"></i> CoPet Account Login</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="loginAlert" class="alert alert-danger py-2 small d-none" role="alert"></div>
+
+                    <ul class="nav nav-pills nav-justified mb-4" id="loginRoleTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold" id="resident-tab" data-bs-toggle="tab" data-bs-target="#resident-login" type="button" role="tab">
+                                <i class="fa-solid fa-user me-1"></i> Resident / User
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin-login" type="button" role="tab">
+                                <i class="fa-solid fa-user-shield me-1"></i> Barangay Admin
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="loginRoleTabContent">
+                        <div class="tab-pane fade show active" id="resident-login" role="tabpanel">
+                            <form id="residentLoginForm" autocomplete="off">
+                                <div class="mb-3">
+                                    <label class="form-label text-white-50 small fw-bold">USERNAME</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                        <input type="text" id="loginUsername" class="form-control" placeholder="Enter username" autocomplete="off" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-white-50 small fw-bold">PASSWORD</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                        <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" autocomplete="new-password" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-glass w-100 py-2 fw-bold mt-2">Login to Resident Portal</button>
+                                <div class="text-center mt-3">
+                                    <small class="text-white-50">Don't have an account yet? 
+                                        <a href="#" class="text-white fw-bold text-decoration-underline" onclick="switchModal('signupModal'); return false;">Sign Up</a>
+                                    </small>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="tab-pane fade" id="admin-login" role="tabpanel">
+                            <form id="adminLoginForm" autocomplete="off">
+                                <div class="mb-3">
+                                    <label class="form-label text-white-50 small fw-bold">ADMINISTRATOR USERNAME</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-shield-halved"></i></span>
+                                        <input type="text" id="adminUsername" class="form-control" placeholder="Enter admin username" autocomplete="off" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-white-50 small fw-bold">PASSWORD</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+                                        <input type="password" id="adminPassword" class="form-control" placeholder="Enter password" autocomplete="new-password" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-glass w-100 py-2 fw-bold mt-2">Login to Admin Portal</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIGN UP MODAL -->
+    <div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-modal shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-white" id="signupModalLabel"><i class="fa-solid fa-user-plus me-2"></i> Create Resident Account</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="signupAlert" class="alert py-2 small d-none" role="alert"></div>
+
+                    <form id="residentSignupForm" autocomplete="off">
+                        <div class="mb-3">
+                            <label class="form-label text-white-50 small fw-bold">FULL NAME</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card"></i></span>
+                                <input type="text" id="signupFullName" class="form-control" placeholder="Enter your full name" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50 small fw-bold">CONTACT NUMBER</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
+                                <input type="tel" id="signupContact" class="form-control" placeholder="09XX-XXX-XXXX" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50 small fw-bold">ADDRESS IN BARANGAY ALABANG</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                <input type="text" id="signupAddress" class="form-control" placeholder="House No., Street, Purok / Subdivision" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50 small fw-bold">USERNAME</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" id="signupUsername" class="form-control" placeholder="Choose a username" autocomplete="off" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50 small fw-bold">PASSWORD</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" id="signupPassword" class="form-control" placeholder="Create a password" autocomplete="new-password" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-glass w-100 py-2 fw-bold mt-2">Sign Up</button>
+                        <div class="text-center mt-3">
+                            <small class="text-white-50">Already have an account? 
+                                <a href="#" class="text-white fw-bold text-decoration-underline" onclick="switchModal('loginModal'); return false;">Login</a>
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function switchModal(targetModalId) {
+            const openModals = document.querySelectorAll('.modal.show');
+            if (openModals.length > 0) {
+                openModals.forEach(m => {
+                    const instance = bootstrap.Modal.getInstance(m);
+                    if (instance) instance.hide();
+                });
+                setTimeout(() => {
+                    const targetEl = document.getElementById(targetModalId);
+                    bootstrap.Modal.getOrCreateInstance(targetEl).show();
+                }, 200);
+            } else {
+                const targetEl = document.getElementById(targetModalId);
+                bootstrap.Modal.getOrCreateInstance(targetEl).show();
+            }
+        }
+
+        function showAlert(elementId, message, type) {
+            const alertBox = document.getElementById(elementId);
+            alertBox.className = `alert alert-${type} py-2 small`;
+            alertBox.textContent = message;
+            alertBox.classList.remove('d-none');
+        }
+
+        // Sign Up Handler
+        document.getElementById('residentSignupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('signupFullName').value.trim();
+            const contact = document.getElementById('signupContact').value.trim();
+            const address = document.getElementById('signupAddress').value.trim();
+            const username = document.getElementById('signupUsername').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+
+            const users = JSON.parse(localStorage.getItem('copet_users') || '[]');
+            if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                showAlert('signupAlert', 'Username is already taken. Please choose another.', 'danger');
+                return;
+            }
+
+            const newUser = { fullName, contact, address, username, password, role: 'resident' };
+            users.push(newUser);
+            localStorage.setItem('copet_users', JSON.stringify(users));
+            localStorage.setItem('copet_current_user', JSON.stringify(newUser));
+
+            showAlert('signupAlert', 'Account created! Redirecting to Resident Portal...', 'success');
+            setTimeout(() => {
+                window.location.href = 'user.html';
+            }, 800);
+        });
+
+        // Resident Login Handler
+        document.getElementById('residentLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            const users = JSON.parse(localStorage.getItem('copet_users') || '[]');
+            const matchedUser = users.find(u => u.username === username && u.password === password);
+
+            if (matchedUser) {
+                localStorage.setItem('copet_current_user', JSON.stringify(matchedUser));
+                window.location.href = 'user.html';
+            } else {
+                showAlert('loginAlert', 'Invalid username or password. Please check your credentials or sign up.', 'danger');
+            }
+        });
+
+        // Clear Admin Inputs Whenever Login Modal Opens
+        document.getElementById('loginModal').addEventListener('shown.bs.modal', function () {
+            document.getElementById('adminUsername').value = '';
+            document.getElementById('adminPassword').value = '';
+        });
+
+        // Admin Login Handler (Accepts any admin username and password & redirects to admin.html)
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value.trim();
+
+            if (!username || !password) {
+                showAlert('loginAlert', 'Please enter your admin username and password.', 'danger');
+                return;
+            }
+
+            const adminAccount = { fullName: username, username: username, role: 'admin' };
+            localStorage.setItem('copet_current_user', JSON.stringify(adminAccount));
+            window.location.href = 'admin.html';
+        });
+
+        // Interactive Floating Paws
+        const pawCanvas = document.getElementById('pawCanvas');
+        const pawCount = 36;
+        const paws = [];
+
+        const pawSVG = `
+            <svg class="paw-inner" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 13.5c-2.5 0-4.5 1.8-4.5 4 0 1.4 1.1 2.5 2.5 2.5.8 0 1.5-.3 2-.3s1.2.3 2 .3c1.4 0 2.5-1.1 2.5-2.5 0-2.2-2-4-4.5-4zm-5.5-2c1.1 0 2-1.1 2-2.5S7.6 6.5 6.5 6.5s-2 1.1-2 2.5.9 2.5 2 2.5zm11 0c1.1 0 2-1.1 2-2.5s-.9-2.5-2-2.5-2 1.1-2 2.5.9 2.5 2 2.5zM9.5 8.5c1.1 0 2-1.1 2-2.5S10.6 3.5 9.5 3.5s-2 1.1-2 2.5.9 2.5 2 2.5zm5 0c1.1 0 2-1.1 2-2.5s-.9-2.5-2-2.5-2 1.1-2 2.5.9 2.5 2 2.5z"/>
+            </svg>
+        `;
+
+        for (let i = 0; i < pawCount; i++) {
+            const paw = document.createElement('div');
+            paw.classList.add('floating-paw');
+            paw.innerHTML = pawSVG;
+
+            const size = Math.floor(Math.random() * 24) + 22;
+            const x = (i / pawCount) * 94 + (Math.random() * 4);
+            const y = Math.random() * 92 + 4;
+            const baseRotate = Math.floor(Math.random() * 70) - 35;
+            const duration = (Math.random() * 3 + 4).toFixed(1) + 's';
+            const delay = (Math.random() * 2).toFixed(1) + 's';
+
+            paw.style.fontSize = `${size}px`;
+            paw.style.left = `${x}%`;
+            paw.style.top = `${y}%`;
+            paw.style.transform = `rotate(${baseRotate}deg)`;
+            paw.style.setProperty('--float-duration', duration);
+            paw.style.setProperty('--float-delay', delay);
+
+            pawCanvas.appendChild(paw);
+            paws.push({ el: paw, baseRotate });
+        }
+
+        function updatePaws(clientX, clientY) {
+            paws.forEach((item) => {
+                const pawRect = item.el.getBoundingClientRect();
+                const pawCenterX = pawRect.left + pawRect.width / 2;
+                const pawCenterY = pawRect.top + pawRect.height / 2;
+
+                const deltaX = clientX - pawCenterX;
+                const deltaY = clientY - pawCenterY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const radius = 150;
+
+                if (distance < radius) {
+                    const force = (radius - distance) / radius;
+                    const moveX = -(deltaX * force * 0.28);
+                    const moveY = -(deltaY * force * 0.28);
+                    item.el.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${item.baseRotate + 16}deg) scale(1.18)`;
+                    item.el.classList.add('active');
+                } else {
+                    item.el.style.transform = `translate(0px, 0px) rotate(${item.baseRotate}deg) scale(1)`;
+                    item.el.classList.remove('active');
+                }
+            });
+        }
+
+        function resetPaws() {
+            paws.forEach((item) => {
+                item.el.style.transform = `translate(0px, 0px) rotate(${item.baseRotate}deg) scale(1)`;
+                item.el.classList.remove('active');
+            });
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            updatePaws(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                updatePaws(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        document.addEventListener('mouseleave', resetPaws);
+        window.addEventListener('touchend', resetPaws);
+    </script>
+</body>
+</html>
